@@ -1,1 +1,1 @@
-https://campusnav-3hf9.onrender.com
+https://dscenav.vercel.app
