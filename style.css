@@ -29,7 +29,8 @@ body {
   font-family: 'Geist', sans-serif;
   background: var(--bg);
   color: var(--text);
-  height: 100vh;
+  height: 100vh;   /* fallback for older browsers without dvh support */
+  height: 100dvh;  /* tracks the *actual* visible viewport as the mobile toolbar shows/hides */
   overflow: hidden;
   display: flex;
   flex-direction: column;
@@ -187,6 +188,10 @@ header {
   display: flex; align-items: center; justify-content: center;
   position: relative; flex-shrink: 0; overflow: hidden;
 }
+/* No-photo state (e.g. gates) — collapse to a thin strip that still
+   holds the absolutely-positioned close button, instead of showing the
+   full placeholder box for something that was never going to get a photo */
+.card-img-wrap.no-photo { aspect-ratio: unset; height: 38px; background: transparent; }
 .card-img-wrap img { width: 100%; height: 100%; object-fit: cover; display: none; }
 .card-img-wrap img.loaded { display: block; }
 
@@ -303,6 +308,29 @@ header {
 .zbtn { width: 36px; height: 36px; background: none; border: none; border-bottom: 1px solid var(--border); font-size: 18px; color: var(--text-muted); cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background .12s, color .12s; }
 .zbtn:last-child { border-bottom: none; }
 .zbtn:hover { background: var(--surface2); color: var(--accent); }
+.zbtn.gps-active { color: #2563eb; }
+.zbtn.gps-active svg { animation: gps-spin 1.5s linear infinite; }
+@keyframes gps-spin { to { transform: rotate(360deg); } }
+
+/* GPS dot on map */
+.gps-dot-wrap { width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; position: relative; }
+.gps-dot {
+  width: 14px; height: 14px; background: #2563eb;
+  border: 2.5px solid #fff; border-radius: 50%;
+  box-shadow: 0 0 0 0 rgba(37,99,235,0.4);
+  animation: gps-pulse 2s ease-out infinite;
+}
+.gps-dot.gps-stale { background: #94a3b8; box-shadow: none; animation: none; }
+@keyframes gps-pulse {
+  0%   { box-shadow: 0 0 0 0 rgba(37,99,235,0.45); }
+  70%  { box-shadow: 0 0 0 10px rgba(37,99,235,0); }
+  100% { box-shadow: 0 0 0 0 rgba(37,99,235,0); }
+}
+.gps-accuracy {
+  position: absolute; border-radius: 50%;
+  background: rgba(37,99,235,0.12); border: 1px solid rgba(37,99,235,0.25);
+  pointer-events: none;
+}
   70%  { box-shadow: 0 0 0 10px rgba(37,99,235,0); }
   100% { box-shadow: 0 0 0 0 rgba(37,99,235,0); }
 }
@@ -529,21 +557,29 @@ header {
     font-weight: 500;
   }
 
-  /* FAB — hidden by default, CSS shows it whenever sheet-hidden class is active */
+  /* FAB — hidden by default, CSS shows it whenever sheet-hidden class is active.
+     Anchored with position:absolute inside #map (not position:fixed) so it
+     shares the same coordinate space as .zoom-ctrls. A fixed element is
+     positioned against the browser's viewport, which real phones resize
+     as the address bar shows/hides — that's what was pushing this out of
+     sync with the zoom controls; absolute keeps both locked together. */
   #mobileFab {
     display: none;
-    position: fixed;
-    bottom: 28px; left: 50%;
+    position: absolute;
+    bottom: max(40px, calc(env(safe-area-inset-bottom, 0px) + 40px));
+    left: 50%;
     transform: translateX(-50%);
     z-index: 70;
+    max-width: calc(100vw - 96px);  /* leave clearance for .zoom-ctrls on the right */
     background: var(--surface);
     border: 1px solid var(--border);
     border-radius: 100px;
     box-shadow: 0 4px 20px rgba(0,0,0,0.18);
-    padding: 10px 20px; gap: 16px;
+    padding: 8px 14px; gap: 10px;
     align-items: center;
     white-space: nowrap;
   }
+  .fab-divider { width: 1px; height: 20px; background: var(--border); flex-shrink: 0; }
   /* Pure CSS: whenever the sheet is dismissed, FAB appears — no JS required */
   .layout:has(.sidebar.sheet-hidden) #mobileFab {
     display: flex !important;
@@ -556,5 +592,29 @@ header {
   }
   .fab-btn:hover  { color: var(--accent); background: var(--accent-bg); }
   .fab-btn.accent { color: var(--accent); }
+
+  /* Icon-only below this width — labels take more room than narrow phones
+     have to give once the FAB has 3+ buttons, so this keeps it from ever
+     overrunning the zoom controls, on any device, without a guessed value. */
+  @media (max-width: 420px) {
+    #mobileFab { padding: 8px 12px; gap: 6px; }
+    .fab-btn   { padding: 6px; gap: 0; }
+    .fab-label { display: none; }
+  }
 }
 
+
+/* ── LOGIN BUTTON (header) ──────────────────────────── */
+.btn-login {
+  margin-left: auto;
+  display: flex; align-items: center; gap: 6px;
+  padding: 8px 15px; background: var(--surface); color: var(--text);
+  border: 1px solid var(--border2); border-radius: 9px;
+  font-family: 'Geist', sans-serif; font-size: 13px; font-weight: 500;
+  text-decoration: none; white-space: nowrap; cursor: pointer;
+  transition: background .15s, border-color .15s, color .15s;
+}
+.btn-login:hover { background: var(--accent-bg); border-color: var(--accent); color: var(--accent-dk); }
+@media (max-width: 767px) {
+  header .btn-login { padding: 7px 12px; }
+}
