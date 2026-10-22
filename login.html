@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Login · DSCE Campus Navigator</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="login.css" />
+</head>
+<body>
+
+<header>
+  <a class="wordmark" href="index.html" style="text-decoration:none;color:inherit">
+    <span class="wordmark-main">CampusNav</span>
+    <span class="wordmark-tag">DSCE</span>
+  </a>
+  <a class="btn-login" href="index.html" style="margin-left:auto">← Back to map</a>
+</header>
+
+<main class="login-main">
+  <form class="login-card" id="loginForm" novalidate>
+    <span class="login-badge">Management</span>
+    <h1>Sign in</h1>
+    <p class="login-sub">Access the campus management console.</p>
+
+    <div class="lfield">
+      <label for="user">Username</label>
+      <input id="user" type="text" autocomplete="username" placeholder="e.g. admin" />
+    </div>
+    <div class="lfield">
+      <label for="pass">Password</label>
+      <div class="pw-wrap">
+        <input id="pass" type="password" autocomplete="current-password" placeholder="••••••••" />
+        <button type="button" class="pw-toggle" id="pwToggle">Show</button>
+      </div>
+    </div>
+
+    <button class="btn-signin" id="signin" type="submit">Sign in →</button>
+    <div class="login-err" id="err" role="alert"></div>
+    <div class="login-hint">Demo login: any username and password will work.</div>
+  </form>
+</main>
+
+<script>
+  var MANAGEMENT_URL = 'https://test-sckd.onrender.com/';
+  var form = document.getElementById('loginForm');
+  var user = document.getElementById('user');
+  var pass = document.getElementById('pass');
+  var err  = document.getElementById('err');
+  var btn  = document.getElementById('signin');
+
+  document.getElementById('pwToggle').onclick = function () {
+    var show = pass.type === 'password';
+    pass.type = show ? 'text' : 'password';
+    this.textContent = show ? 'Hide' : 'Show';
+  };
+
+  form.addEventListener('submit', function (e) {
+    e.preventDefault();
+    user.classList.toggle('bad', !user.value.trim());
+    pass.classList.toggle('bad', !pass.value);
+    if (!user.value.trim() || !pass.value) {
+      err.textContent = 'Enter a username and password.';
+      return;
+    }
+    err.textContent = '';
+    btn.disabled = true;
+    btn.textContent = 'Signing in…';
+    try { sessionStorage.setItem('campusnavUser', user.value.trim()); } catch (x) {}
+    setTimeout(function () { window.location.assign(MANAGEMENT_URL); }, 700);
+  });
+</script>
+</body>
+</html>
